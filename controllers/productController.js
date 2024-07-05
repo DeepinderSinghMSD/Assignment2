@@ -7,7 +7,12 @@ exports.createProduct = async (req, res) => {
         await product.save();
         res.status(201).json(product);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            res.status(400).json({ error: errors.join(', ') });
+        } else {
+            res.status(400).json({ error: error.message });
+        }
     }
 };
 
@@ -35,20 +40,25 @@ exports.getProduct = async (req, res) => {
 // for updating the product
 exports.updateProduct = async (req, res) => {
     try {
-        const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
         if (!product) return res.status(404).json({ message: 'Product has not been found' });
         res.status(200).json(product);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            res.status(400).json({ error: errors.join(', ') });
+        } else {
+            res.status(400).json({ error: error.message });
+        }
     }
 };
 
-// for deleting a product
+// for deleting the product
 exports.deleteProduct = async (req, res) => {
     try {
         const product = await Product.findByIdAndDelete(req.params.id);
         if (!product) return res.status(404).json({ message: 'Product has not been found' });
-        res.status(200).json({ message: 'Product is deleted' });
+        res.status(200).json({ message: 'Product has been deleted' });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

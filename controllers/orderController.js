@@ -19,7 +19,12 @@ exports.createOrder = async (req, res) => {
 
         res.status(201).json(order);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            res.status(400).json({ error: errors.join(', ') });
+        } else {
+            res.status(400).json({ error: error.message });
+        }
     }
 };
 
@@ -47,11 +52,16 @@ exports.getOrder = async (req, res) => {
 // for updating the order
 exports.updateOrder = async (req, res) => {
     try {
-        const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
         if (!order) return res.status(404).json({ message: 'Order has not been found' });
         res.status(200).json(order);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            res.status(400).json({ error: errors.join(', ') });
+        } else {
+            res.status(400).json({ error: error.message });
+        }
     }
 };
 
@@ -60,7 +70,7 @@ exports.deleteOrder = async (req, res) => {
     try {
         const order = await Order.findByIdAndDelete(req.params.id);
         if (!order) return res.status(404).json({ message: 'Order has not been found' });
-        res.status(200).json({ message: 'Order is deleted' });
+        res.status(200).json({ message: 'Order has been deleted' });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

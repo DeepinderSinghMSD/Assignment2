@@ -7,7 +7,12 @@ exports.createUser = async (req, res) => {
         await user.save();
         res.status(201).json(user);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            res.status(400).json({ error: errors.join(', ') });
+        } else {
+            res.status(400).json({ error: error.message });
+        }
     }
 };
 
@@ -35,20 +40,25 @@ exports.getUser = async (req, res) => {
 // for updating the user
 exports.updateUser = async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
         if (!user) return res.status(404).json({ message: 'User has not been found' });
         res.status(200).json(user);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            res.status(400).json({ error: errors.join(', ') });
+        } else {
+            res.status(400).json({ error: error.message });
+        }
     }
 };
 
-// for deleting a user
+// for deleting the user
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);
         if (!user) return res.status(404).json({ message: 'User has not been found' });
-        res.status(200).json({ message: 'User is deleted' });
+        res.status(200).json({ message: 'User has been deleted' });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

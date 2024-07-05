@@ -7,7 +7,12 @@ exports.createCart = async (req, res) => {
         await cart.save();
         res.status(201).json(cart);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            res.status(400).json({ error: errors.join(', ') });
+        } else {
+            res.status(400).json({ error: error.message });
+        }
     }
 };
 
@@ -35,11 +40,16 @@ exports.getCart = async (req, res) => {
 // for updating a cart
 exports.updateCart = async (req, res) => {
     try {
-        const cart = await Cart.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const cart = await Cart.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
         if (!cart) return res.status(404).json({ message: 'Cart has not been found' });
         res.status(200).json(cart);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            res.status(400).json({ error: errors.join(', ') });
+        } else {
+            res.status(400).json({ error: error.message });
+        }
     }
 };
 
