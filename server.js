@@ -30,7 +30,12 @@ connectDB();
 // Middleware parser
 app.use(bodyParser.json());
 
-// all routes
+// Root route
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'Server is running' });
+});
+
+// All routes
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
